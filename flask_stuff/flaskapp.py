@@ -5,8 +5,8 @@ import pandas as pd
 app = Flask(__name__)
 
 # outline filepath for CSVs
-csv1 = ("../SurfsUp/Output/measurements_clean.csv")
-csv2 = ("../SurfsUp/Output/stations_clean.csv")
+csv1 = ("../Output/measurements_clean.csv")
+csv2 = ("../Output/stations_clean.csv")
 
 # read in CSVs for later manipulation
 measurements = pd.DataFrame(pd.read_csv(csv1))
@@ -16,14 +16,14 @@ stations = pd.DataFrame(pd.read_csv(csv2))
 prcp_dict = measurements[['date', 'prcp']].set_index('date').to_dict()
 
 # convert station dataframe to dictionary
-stat_dict = stations.set_index('id').to_dict(orient='index')
+stat_dict = stations.to_dict(orient='index')
 
 # convert temperature information to dictionary
 temp_dict = measurements[['date', 'tobs']].set_index('date').to_dict()
 
 # convert date field in measurements to make searchable
 new_measurements = measurements
-new_measurements.date = int(new_measurements.date.replace('-', ''))
+new_measurements.date = new_measurements.date.map(lambda x: x.replace("-", "")).astype(int)
 
 @app.route("/api/v1.0")
 def index():
@@ -49,15 +49,15 @@ def tobs():
 def start(start):
     print('Someone has visited the start page')
     parsed_start = int(start.replace('-', ''))
-    parsed_end = new_measurements.date.min()
+    parsed_end = new_measurements.date.max()
     subset_meas = new_measurements[(new_measurements.date >= parsed_start) & (new_measurements.date <= parsed_end)]
     maxtemp = subset_meas.tobs.max()
     mintemp = subset_meas.tobs.min()
     avgtemp = subset_meas.tobs.mean()
     print('For date range selected, the:\nMax temp is: ', maxtemp, '\nMin temp is: ', mintemp, '\nAverage temp is: ', avgtemp)
-    return jsonify({"Maximum Temperature": maxtemp,
-                    "Minimum Temperature": mintemp,
-                    "Average Temperature": avgtemp})
+    return jsonify({"Maximum Temperature": str(maxtemp),
+                    "Minimum Temperature": str(mintemp),
+                    "Average Temperature": str(avgtemp)})
 
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start, end):
@@ -69,9 +69,9 @@ def start_end(start, end):
     mintemp = subset_meas.tobs.min()
     avgtemp = subset_meas.tobs.mean()
     print('For date range selected, the:\nMax temp is: ', maxtemp, '\nMin temp is: ', mintemp, '\nAverage temp is: ', avgtemp)
-    return jsonify({"Maximum Temperature": maxtemp,
-                    "Minimum Temperature": mintemp,
-                    "Average Temperature": avgtemp})
+    return jsonify({"Maximum Temperature": str(maxtemp),
+                    "Minimum Temperature": str(mintemp),
+                    "Average Temperature": str(avgtemp)})
 
 
 
